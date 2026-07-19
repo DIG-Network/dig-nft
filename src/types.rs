@@ -42,7 +42,11 @@ impl DidRef {
 
     /// The [`TransferNft`] condition that assigns an NFT to this DID.
     pub(crate) fn transfer_condition(&self) -> TransferNft {
-        TransferNft::new(Some(self.launcher_id), Vec::new(), Some(self.inner_puzzle_hash))
+        TransferNft::new(
+            Some(self.launcher_id),
+            Vec::new(),
+            Some(self.inner_puzzle_hash),
+        )
     }
 }
 

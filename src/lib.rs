@@ -13,7 +13,7 @@
 //! dig-nft **never holds a secret key, never signs, and never touches the network.** Every
 //! builder takes only public inputs (an [`Owner`] carrying a public key or a caller-supplied
 //! inner spender, a [`DidRef`] referencing a DID by hash) and appends unsigned coin spends to
-//! a caller-owned [`SpendContext`](chia_wallet_sdk::driver::SpendContext). The consumer signs
+//! a caller-owned [`SpendContext`]. The consumer signs
 //! the messages reported by [`sign::required_signatures`], assembles the `SpendBundle`, and
 //! broadcasts.
 //!
@@ -62,4 +62,12 @@ pub use chia_wallet_sdk::types::conditions::{TradePrice, TransferNft};
 #[must_use]
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn version_is_reported() {
+        assert!(!super::version().is_empty());
+    }
 }

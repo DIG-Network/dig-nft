@@ -41,8 +41,13 @@ pub fn transfer_with_metadata(
     metadata_update: &MetadataUpdate,
 ) -> Result<NftSpend> {
     let update_spend = metadata_update.spend(ctx)?;
-    let child =
-        nft.transfer_with_metadata(ctx, owner, new_owner_puzzle_hash, update_spend, Conditions::new())?;
+    let child = nft.transfer_with_metadata(
+        ctx,
+        owner,
+        new_owner_puzzle_hash,
+        update_spend,
+        Conditions::new(),
+    )?;
     Ok(NftSpend {
         coin_spends: ctx.take(),
         children: vec![child],

@@ -1,46 +1,64 @@
 # dig-nft
 
-The DIG Network canonical **Chia NFT expert crate**: a pure, key-free, network-free
-SpendBundle-builder for Chia NFTs (CHIP-0005 NFT1). It builds the exact `CoinSpend`s for every NFT
-lifecycle operation and reports the exact signatures a caller must produce — it **never holds a key,
-never signs, and never broadcasts**.
+The DIG Network canonical **Chia NFT1 expert crate**: a pure, key-free, network-free
+`SpendBundle`-builder for Chia NFTs.
 
-## Security model
+`dig-nft` constructs the exact `CoinSpend`s for every NFT lifecycle operation — mint (single/bulk,
+standalone or DID-owned), transfer (with or without a metadata update), metadata/URI update, royalty
+configuration + offer settlement, owner-DID assign/unassign, and lineage reconstruction — and reports
+the exact signatures a caller must produce. On-chain shape per **CHIP-0005** (NFT1); off-chain
+metadata per **CHIP-0007**.
 
-`dig-nft` is a **spend-builder**, not a wallet, node, or signer. Four invariants hold across the
-whole crate:
+## Custody model
 
-- **No network** — every function is a pure transform of its inputs. The caller fetches coins and
-  broadcasts the assembled bundle.
-- **No keys** — the crate never accepts, holds, derives, persists, or logs a secret key. It reports
-  the messages that must be signed; the caller's signer produces the signatures.
-- **Unsigned output** — every operation returns unsigned `CoinSpend`s. Assembling and signing the
-  `SpendBundle` is always the caller's responsibility.
-- **SDK byte-source-of-truth** — every puzzle, layer, and coin-spend byte is produced by
-  [`chia-wallet-sdk`](https://crates.io/crates/chia-wallet-sdk). `dig-nft` adds NFT-workflow
-  ergonomics over the SDK primitives; it never re-implements a puzzle or hand-rolls a spend bundle.
+`dig-nft` **never holds a secret key, never signs, and never touches the network.** Every builder
+takes only public inputs and appends unsigned coin spends to a caller-owned `SpendContext`; the
+consumer signs the reported messages, assembles the `SpendBundle`, and broadcasts.
 
-## Scope
+It is also **identity-agnostic** (#908): an owner DID is referenced purely by a `DidRef` (two
+hashes). `dig-nft` never constructs or spends a DID coin — for a DID-owned operation it builds the
+NFT side and RETURNS the conditions the external DID must emit in the same bundle
+(`NftSpend::did_conditions`). It depends on no DIG crate.
 
-The complete designed surface (see [`SPEC.md`](./SPEC.md) — the normative contract):
+See [`SPEC.md`](./SPEC.md) for the normative contract.
 
-- **NFT model** — parse/verify an NFT singleton (singleton + state layer + ownership layer +
-  metadata layer + royalty transfer program); `launcher_id` / `nft_id` computation.
-- **Mint** — single and bulk; standalone and DID-owned (owner DID assigned at mint).
-- **Transfer** — transfer an NFT, optionally updating metadata in the same spend.
-- **Metadata** — construct valid metadata; append data / metadata / license URIs (append-only).
-- **Royalty** — royalty percentage + royalty puzzle hash; offer-compatible.
-- **Owner DID** — assign / unassign the owner DID via the ownership layer (consumes
-  [`dig-did`](https://crates.io/crates/dig-did)).
-- **Edition / series** — edition-numbered / series minting.
-- **Lineage reconstruction** — hydrate an NFT from its parent coin spends.
+## Quickstart
 
-## Status
+```rust
+use chia_puzzle_types::nft::NftMetadata;
+use chia_wallet_sdk::driver::SpendContext;
+use chia_wallet_sdk::types::MAINNET_CONSTANTS;
+use dig_nft::{mint, required_signatures, MintSpec, Owner};
 
-Genesis scaffold. The v0.1.0 foundation lands via the gated PR tracked at
-DIG-Network/dig_ecosystem#1225.
+fn build_mint(
+    ctx: &mut SpendContext,
+    owner_pk: chia_wallet_sdk::prelude::PublicKey,
+    owner_puzzle_hash: chia_protocol::Bytes32,
+    funding_coin: chia_protocol::Coin,
+) -> anyhow::Result<()> {
+    // Metadata is serialized (allocator-independent) — never a pre-allocated pointer.
+    let metadata = ctx.serialize(&NftMetadata {
+        data_uris: vec!["https://example.com/art.png".to_string()],
+        ..Default::default()
+    })?;
+    let spec = MintSpec::new(metadata, owner_puzzle_hash).with_royalty(300); // 3%
+
+    let spend = mint(ctx, &Owner::Standard(owner_pk), funding_coin, &spec)?;
+
+    // dig-nft never signs — it reports what the caller must sign.
+    let _required =
+        required_signatures(&spend.coin_spends, MAINNET_CONSTANTS.agg_sig_me_additional_data)?;
+    // caller: sign the required messages, assemble SpendBundle::new(spend.coin_spends, sig), broadcast.
+    Ok(())
+}
+```
+
+## Operations
+
+`mint` · `bulk_mint` · `transfer` · `transfer_with_metadata` · `update_metadata` · `assign_owner` ·
+`unassign_owner` · `lock_settlement` · `unlock_settlement` · `parse` · `parse_child` ·
+`encode_nft_id` / `decode_nft_id` · `required_signatures`.
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](./LICENSE-APACHE) or
-[MIT license](./LICENSE-MIT) at your option.
+Apache-2.0 OR MIT.

@@ -50,7 +50,10 @@ pub fn unassign_owner(ctx: &mut SpendContext, owner: &Owner, nft: Nft) -> Result
         TransferNft::new(None, Vec::new(), None),
         Conditions::new(),
     )?;
-    debug_assert!(did_conditions.is_empty(), "clearing an owner emits no DID conditions");
+    debug_assert!(
+        did_conditions.is_empty(),
+        "clearing an owner emits no DID conditions"
+    );
     Ok(NftSpend {
         coin_spends: ctx.take(),
         children: vec![child],

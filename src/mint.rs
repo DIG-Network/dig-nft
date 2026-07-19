@@ -69,7 +69,8 @@ pub fn bulk_mint(
 
     for (index, spec) in specs.iter().enumerate() {
         let nft_mint = build_nft_mint(ctx, spec)?;
-        let launcher = IntermediateLauncher::new(funding_coin.coin_id(), index, total).create(ctx)?;
+        let launcher =
+            IntermediateLauncher::new(funding_coin.coin_id(), index, total).create(ctx)?;
         let (parent, did, nft) = mint_from_launcher(ctx, launcher, &nft_mint)?;
         parent_conditions = parent_conditions.extend(parent);
         did_conditions = did_conditions.extend(did);
@@ -186,8 +187,12 @@ mod tests {
         coin_spends: &[CoinSpend],
         sks: &[SecretKey],
     ) -> anyhow::Result<chia_wallet_sdk::prelude::Signature> {
-        let reported = required_signatures(coin_spends, TESTNET11_CONSTANTS.agg_sig_me_additional_data)?;
-        assert!(!reported.is_empty(), "a spend must report required signatures");
+        let reported =
+            required_signatures(coin_spends, TESTNET11_CONSTANTS.agg_sig_me_additional_data)?;
+        assert!(
+            !reported.is_empty(),
+            "a spend must report required signatures"
+        );
         Ok(sign_transaction(coin_spends, sks)?)
     }
 
@@ -205,8 +210,11 @@ mod tests {
         let ctx = &mut SpendContext::new();
 
         let alice = sim.bls(2);
-        let spec = MintSpec::new(metadata(ctx, "https://example.com/0.png")?, alice.puzzle_hash)
-            .with_royalty(300);
+        let spec = MintSpec::new(
+            metadata(ctx, "https://example.com/0.png")?,
+            alice.puzzle_hash,
+        )
+        .with_royalty(300);
 
         let spend = mint(ctx, &Owner::Standard(alice.pk), alice.coin, &spec)?;
 
@@ -231,7 +239,10 @@ mod tests {
 
         let alice = sim.bls(2);
         let layer = StandardLayer::new(alice.pk);
-        let spec = MintSpec::new(metadata(ctx, "https://example.com/custom.png")?, alice.puzzle_hash);
+        let spec = MintSpec::new(
+            metadata(ctx, "https://example.com/custom.png")?,
+            alice.puzzle_hash,
+        );
 
         let spend = mint(ctx, &Owner::Custom(&layer), alice.coin, &spec)?;
         let signature = sign_for_sim(&spend.coin_spends, &[alice.sk])?;
@@ -246,10 +257,16 @@ mod tests {
 
         let alice = sim.bls(2);
         let specs = vec![
-            MintSpec::new(metadata(ctx, "https://example.com/0.png")?, alice.puzzle_hash)
-                .with_royalty(250),
-            MintSpec::new(metadata(ctx, "https://example.com/1.png")?, alice.puzzle_hash)
-                .with_royalty(500),
+            MintSpec::new(
+                metadata(ctx, "https://example.com/0.png")?,
+                alice.puzzle_hash,
+            )
+            .with_royalty(250),
+            MintSpec::new(
+                metadata(ctx, "https://example.com/1.png")?,
+                alice.puzzle_hash,
+            )
+            .with_royalty(500),
         ];
 
         let spend = bulk_mint(ctx, &Owner::Standard(alice.pk), alice.coin, &specs)?;
@@ -291,7 +308,7 @@ mod tests {
         let (create_did, did) =
             Launcher::new(alice.coin.coin_id(), 1).create_simple_did(ctx, &alice_p2)?;
         alice_p2.spend(ctx, alice.coin, create_did)?;
-        sim.spend_coins(ctx.take(), &[alice.sk.clone()])?;
+        sim.spend_coins(ctx.take(), std::slice::from_ref(&alice.sk))?;
 
         // A separate funding coin parents the NFT launcher (never the DID).
         let funding = sim.new_coin(alice.puzzle_hash, 2);
