@@ -8,11 +8,12 @@
 //! conditions an external DID singleton must emit.
 
 use chia_protocol::{Bytes32, CoinSpend, Program};
-use chia_wallet_sdk::driver::{DriverError, Nft, Spend, SpendContext, SpendWithConditions};
+use chia_wallet_sdk::driver::{
+    DriverError, Nft, Spend, SpendContext, SpendWithConditions, StandardLayer,
+};
 use chia_wallet_sdk::prelude::PublicKey;
 use chia_wallet_sdk::types::conditions::TransferNft;
 use chia_wallet_sdk::types::Conditions;
-use chia_wallet_sdk::StandardLayer;
 
 /// A reference to an owner DID singleton, by hash only.
 ///
