@@ -1,0 +1,27 @@
+# dig-nft — the DIG Network canonical Chia NFT expert crate.
+#
+# A pure, key-free, network-free SpendBundle-builder library for Chia NFTs (CHIP-0005 NFT1). dig-nft
+# constructs the exact CoinSpends for every NFT lifecycle operation — mint (single/bulk), transfer,
+# metadata/URI update, royalty configuration, owner-DID assignment, edition/series minting, and
+# lineage reconstruction — and reports the exact signatures a caller must produce. It NEVER holds a
+# secret key, NEVER signs, and NEVER touches the network. The consumer signs the reported messages,
+# assembles the SpendBundle, and broadcasts. See SPEC.md for the normative contract.
+#
+# This is the genesis scaffold (v0.0.0, unpublished). The v0.1.0 foundation — the type surface, the
+# error taxonomy, the NFT model parse/verify, the mint/transfer/metadata/royalty/DID-link builders,
+# and the signing boundary — lands via the gated PR that bumps this to 0.1.0 (DIG-Network/dig_ecosystem#1225).
+[package]
+name = "dig-nft"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.75.0"
+license = "Apache-2.0 OR MIT"
+description = "The DIG Network canonical Chia NFT expert crate: a pure, key-free, network-free SpendBundle-builder for Chia NFTs (mint, transfer, metadata/URIs, royalty, DID-link, lineage). Never holds a key, never signs, never broadcasts."
+repository = "https://github.com/DIG-Network/dig-nft"
+readme = "README.md"
+keywords = ["dig", "chia", "nft", "singleton", "metadata"]
+categories = ["cryptography::cryptocurrencies", "api-bindings"]
+
+[dependencies]
+
+[dev-dependencies]
