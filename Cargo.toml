@@ -23,5 +23,13 @@ keywords = ["dig", "chia", "nft", "singleton", "metadata"]
 categories = ["cryptography::cryptocurrencies", "api-bindings"]
 
 [dependencies]
+chia-wallet-sdk = "0.30"
+chia-protocol = "0.26"
+chia-puzzle-types = "0.26"
+clvm-traits = "0.26"
+thiserror = "2"
 
 [dev-dependencies]
+chia-sdk-test = "0.30"
+hex = "0.4"
+anyhow = "1"
