@@ -43,7 +43,7 @@ pub mod edition;
 
 pub use error::{Error, Result};
 pub use hydrate::{parse, parse_child, ParsedNft};
-pub use metadata::{update_metadata, MetadataUpdate};
+pub use metadata::{update_metadata, MetadataUpdate, UriKind};
 pub use mint::{bulk_mint, mint};
 pub use nft_id::{decode_nft_id, encode_nft_id};
 pub use owner::{assign_owner, unassign_owner};

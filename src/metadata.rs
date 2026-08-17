@@ -13,8 +13,12 @@ use chia_wallet_sdk::types::Conditions;
 use crate::error::Result;
 use crate::types::{NftSpend, Owner};
 
-/// The metadata-updater operation: add a new data, metadata, or license URI (append-only).
-pub use chia_wallet_sdk::driver::MetadataUpdate;
+/// The metadata-updater operation: add a new URI (append-only), and which of the NFT's three
+/// URI lists ([`UriKind`]) it is added to.
+///
+/// chia-wallet-sdk 0.34 reshaped this from an enum of three variants into a struct carrying a
+/// [`UriKind`]; the CLVM solution it produces (`("u" | "mu" | "lu", uri)`) is unchanged.
+pub use chia_wallet_sdk::driver::{MetadataUpdate, UriKind};
 
 /// Apply `metadata_update` to `nft`, keeping it with its current owner.
 ///

@@ -17,7 +17,7 @@ use chia_wallet_sdk::prelude::ToTreeHash;
 use chia_wallet_sdk::types::Conditions;
 use dig_nft::{
     assign_owner, lock_settlement, parse, parse_child, transfer, transfer_with_metadata,
-    unassign_owner, unlock_settlement, update_metadata, DidRef, MetadataUpdate, Owner,
+    unassign_owner, unlock_settlement, update_metadata, DidRef, MetadataUpdate, Owner, UriKind,
 };
 
 #[test]
@@ -49,7 +49,10 @@ fn transfer_with_metadata_appends_a_uri_and_moves_owner() -> anyhow::Result<()> 
     let nft = mint_standalone(&mut sim, ctx, &alice)?;
 
     let mirror = "https://mirror.example/0.png";
-    let update = MetadataUpdate::NewDataUri(mirror.to_string());
+    let update = MetadataUpdate {
+        kind: UriKind::Data,
+        uri: mirror.to_string(),
+    };
     let spend = transfer_with_metadata(
         ctx,
         &Owner::Standard(alice.pk),
@@ -83,7 +86,10 @@ fn update_metadata_keeps_the_owner() -> anyhow::Result<()> {
     let alice = sim.bls(2);
     let nft = mint_standalone(&mut sim, ctx, &alice)?;
 
-    let update = MetadataUpdate::NewMetadataUri("https://meta.example/0.json".to_string());
+    let update = MetadataUpdate {
+        kind: UriKind::Metadata,
+        uri: "https://meta.example/0.json".to_string(),
+    };
     let spend = update_metadata(ctx, &Owner::Standard(alice.pk), nft, &update)?;
     assert_eq!(
         spend.child().info.p2_puzzle_hash,

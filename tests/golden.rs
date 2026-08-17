@@ -23,11 +23,13 @@
 
 use chia_protocol::{Bytes32, Coin, CoinSpend, Program};
 use chia_puzzle_types::nft::NftMetadata;
+use chia_puzzle_types::offer::{NotarizedPayment, Payment};
 use chia_sdk_test::BlsPair;
-use chia_wallet_sdk::driver::{MetadataUpdate, Nft, SpendContext};
+use chia_wallet_sdk::driver::{MetadataUpdate, Nft, SpendContext, UriKind};
+use chia_wallet_sdk::types::conditions::TradePrice;
 use dig_nft::{
-    assign_owner, bulk_mint, mint, transfer, unassign_owner, update_metadata, DidRef, MintSpec,
-    NftSpend, Owner,
+    assign_owner, bulk_mint, lock_settlement as royalty_lock, mint, transfer, unassign_owner,
+    unlock_settlement as royalty_unlock, update_metadata, DidRef, MintSpec, NftSpend, Owner,
 };
 
 /// Where the blessed bytes live, relative to the crate root.
@@ -94,7 +96,11 @@ fn build_every_operation() -> anyhow::Result<String> {
     let did_spec = MintSpec::new(metadata(ctx, "dig://store/did")?, owner_puzzle_hash)
         .with_royalty(ROYALTY_BASIS_POINTS)
         .with_owner_did(did);
-    render(&mut rendered, "mint_did", &mint(ctx, &owner, funding, &did_spec)?);
+    render(
+        &mut rendered,
+        "mint_did",
+        &mint(ctx, &owner, funding, &did_spec)?,
+    );
 
     let bulk = bulk_mint(ctx, &owner, funding, &[plain_spec, did_spec])?;
     render(&mut rendered, "bulk_mint", &bulk);
@@ -114,6 +120,35 @@ fn build_every_operation() -> anyhow::Result<String> {
         "unassign_owner",
         &unassign_owner(ctx, &owner, nft)?,
     );
+    // Settlement is the royalty-bearing path, so its trade prices are deliberately non-empty
+    // and mutually distinct — the crate's other settlement tests pass an EMPTY price list,
+    // which cannot observe how a trade price is encoded at all.
+    let trade_prices = vec![
+        TradePrice::new(1_000_003, Bytes32::from([0xD1; 32])),
+        TradePrice::new(7, Bytes32::from([0xD2; 32])),
+    ];
+    let locked = royalty_lock(ctx, &owner, nft, trade_prices)?;
+    render(&mut rendered, "lock_settlement", &locked);
+    let locked_nft = *locked.child();
+
+    let payment = Payment::new(
+        Bytes32::from(RECIPIENT_PUZZLE_HASH),
+        locked_nft.coin.amount,
+        ctx.hint(Bytes32::from(RECIPIENT_PUZZLE_HASH))?,
+    );
+    render(
+        &mut rendered,
+        "unlock_settlement",
+        &royalty_unlock(
+            ctx,
+            locked_nft,
+            vec![NotarizedPayment::new(
+                Bytes32::from([0x55; 32]),
+                vec![payment],
+            )],
+        )?,
+    );
+
     render(
         &mut rendered,
         "update_metadata",
@@ -121,7 +156,10 @@ fn build_every_operation() -> anyhow::Result<String> {
             ctx,
             &owner,
             nft,
-            &MetadataUpdate::NewDataUri("dig://store/mirror".to_string()),
+            &MetadataUpdate {
+                kind: UriKind::Data,
+                uri: "dig://store/mirror".to_string(),
+            },
         )?,
     );
 
