@@ -28,8 +28,9 @@ use chia_sdk_test::BlsPair;
 use chia_wallet_sdk::driver::{MetadataUpdate, Nft, SpendContext, UriKind};
 use chia_wallet_sdk::types::conditions::TradePrice;
 use dig_nft::{
-    assign_owner, bulk_mint, lock_settlement as royalty_lock, mint, transfer, unassign_owner,
-    unlock_settlement as royalty_unlock, update_metadata, DidRef, MintSpec, NftSpend, Owner,
+    assign_owner, bulk_mint, lock_settlement as royalty_lock, mint, transfer,
+    transfer_with_metadata, unassign_owner, unlock_settlement as royalty_unlock, update_metadata,
+    DidRef, MintSpec, NftSpend, Owner,
 };
 
 /// Where the blessed bytes live, relative to the crate root.
@@ -146,6 +147,21 @@ fn build_every_operation() -> anyhow::Result<String> {
                 Bytes32::from([0x55; 32]),
                 vec![payment],
             )],
+        )?,
+    );
+
+    render(
+        &mut rendered,
+        "transfer_with_metadata",
+        &transfer_with_metadata(
+            ctx,
+            &owner,
+            nft,
+            Bytes32::from(RECIPIENT_PUZZLE_HASH),
+            &MetadataUpdate {
+                kind: UriKind::License,
+                uri: "dig://store/license".to_string(),
+            },
         )?,
     );
 

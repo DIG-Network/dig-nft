@@ -81,7 +81,8 @@ All builders take `ctx: &mut SpendContext`, append their coin spends to it, and 
 - **`transfer_with_metadata(ctx, owner, nft, new_owner_puzzle_hash, update) -> NftSpend`** — change
   owner AND run the metadata updater in one spend.
 - **`update_metadata(ctx, owner, nft, update) -> NftSpend`** — apply a metadata update, keeping the
-  current owner. `update` is a `MetadataUpdate` (`NewDataUri` / `NewMetadataUri` / `NewLicenseUri`).
+  current owner. `update` is a `MetadataUpdate { kind, uri }`, whose `kind` is a `UriKind` (`Data` /
+  `Metadata` / `License`).
 - **`assign_owner(ctx, owner, nft, did) -> NftSpend`** — attribute `nft` to `did`, keeping the p2
   owner. `did_conditions` MUST be emitted by the external DID in the same bundle.
 - **`unassign_owner(ctx, owner, nft) -> NftSpend`** — clear the owner DID. Empty `did_conditions`.
@@ -126,5 +127,15 @@ Editing an item's edition metadata after mint is an append-only `update_metadata
 - Every builder's output is validated on the in-process Chia simulator (`chia-sdk-test`) in the test
   suite, including a funding-coin-parented, DID-acknowledged mint.
 - The DID acknowledgement contract (§3) is byte-compatible with the SDK `Nft::assign_owner` handshake.
+- Every builder's produced `CoinSpend`s — coin, puzzle reveal, and solution bytes — are pinned to a
+  checked-in golden fixture (`tests/golden/spends.hex`). NFT1 puzzles are consensus-fixed, so a
+  chia-wallet-sdk upgrade MUST NOT move a single byte of a produced spend; the fixture holds that
+  invariant across SDK lines rather than trusting that the new code merely compiles.
 
-# WIP: uplift to chia 0.36.1 / chia-wallet-sdk 0.34 (dig_ecosystem#3077)
+## 10. Dependency line
+
+dig-nft builds against **chia 0.36.1** (`chia-protocol`, `chia-puzzle-types`, `clvm-traits`),
+**chia-wallet-sdk 0.34**, and **clvmr 0.16.2** — the same line as `dig-account`, `dig-cat`, and
+`dig-offers`. This is normative, not incidental: `CoinSpend` and `PublicKey` are distinct Rust types
+across incompatible 0.x lines, so a builder compiled against a different line CANNOT hand its spends
+to the ecosystem signer. A consumer MUST resolve these crates to the same versions.
