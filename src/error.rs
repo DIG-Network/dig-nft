@@ -8,7 +8,7 @@
 
 use chia_wallet_sdk::driver::DriverError;
 use chia_wallet_sdk::signer::SignerError;
-use chia_wallet_sdk::utils::AddressError;
+use chia_wallet_sdk::utils::Bech32Error;
 
 /// The result of a dig-nft operation.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -27,8 +27,11 @@ pub enum Error {
     Signer(#[from] SignerError),
 
     /// A failure encoding or decoding an `nft1…` bech32m identifier.
+    ///
+    /// The wrapped type is the SDK's bech32m error; chia-wallet-sdk 0.34 renamed it from
+    /// `AddressError` to [`Bech32Error`] when it generalized the codec beyond addresses.
     #[error("address error: {0}")]
-    Address(#[from] AddressError),
+    Address(#[from] Bech32Error),
 
     /// Caller-supplied input that cannot produce a valid spend (e.g. an empty bulk-mint
     /// request). The message states the precise violation.
