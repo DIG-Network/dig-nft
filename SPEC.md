@@ -131,6 +131,10 @@ Editing an item's edition metadata after mint is an append-only `update_metadata
   checked-in golden fixture (`tests/golden/spends.hex`). NFT1 puzzles are consensus-fixed, so a
   chia-wallet-sdk upgrade MUST NOT move a single byte of a produced spend; the fixture holds that
   invariant across SDK lines rather than trusting that the new code merely compiles.
+- Every one of those vectors — all ten builders, including the royalty-bearing `lock_settlement` —
+  is generated on the PREVIOUS SDK line and then asserted unchanged on the current one. A vector
+  blessed only on the line it is meant to police records that line's behaviour instead of checking
+  it; `tests/golden.rs` documents how to re-derive the baseline.
 
 ## 10. Dependency line
 

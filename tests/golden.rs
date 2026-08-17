@@ -10,6 +10,21 @@
 //!
 //! Regenerate deliberately (and only when a change is understood) with `DIG_NFT_BLESS=1`.
 //!
+//! ## Provenance — every vector has a 0.30 baseline
+//!
+//! All ten builders' vectors were produced on the OLD line (chia-wallet-sdk 0.30 /
+//! chia-protocol 0.26 / clvmr 0.14) and only then asserted on 0.34. A vector blessed on the
+//! new line alone would record whatever the new code does and could never disagree with it,
+//! which matters most for `lock_settlement`: it is the royalty-bearing path, the one place a
+//! curried-argument reorder moves value rather than merely bytes.
+//!
+//! To re-derive the baseline, check out the pre-uplift tree — commit `518e4a4`, whose
+//! `Cargo.toml` pins the 0.30 line and whose `src/` builders are byte-for-byte the ones this
+//! branch ships (the uplift touched only `error.rs`, `lib.rs`, and `metadata.rs`) — overlay
+//! this file with `MetadataUpdate`'s 0.30 enum spelling (`MetadataUpdate::NewDataUri(..)` /
+//! `::NewLicenseUri(..)`, which the 0.34 struct replaced), then run `DIG_NFT_BLESS=1 cargo
+//! test --test golden`. The bytes it writes equal this crate's checked-in fixture exactly.
+//!
 //! ## What this fixture can and cannot see
 //!
 //! Every same-typed argument is given a DISTINCT, non-round value so a swap between two of
