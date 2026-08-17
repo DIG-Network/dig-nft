@@ -126,3 +126,5 @@ Editing an item's edition metadata after mint is an append-only `update_metadata
 - Every builder's output is validated on the in-process Chia simulator (`chia-sdk-test`) in the test
   suite, including a funding-coin-parented, DID-acknowledged mint.
 - The DID acknowledgement contract (§3) is byte-compatible with the SDK `Nft::assign_owner` handshake.
+
+# WIP: uplift to chia 0.36.1 / chia-wallet-sdk 0.34 (dig_ecosystem#3077)
